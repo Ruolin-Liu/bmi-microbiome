@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ---------------------- 解决Matplotlib中文乱码 ----------------------
-plt.rcParams["font.sans-serif"] = ["SimHei"]
+plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei", "Noto Sans CJK JP", "SimHei"]
 plt.rcParams["axes.unicode_minus"] = False
 
 # ---------------------- 页面配置 ----------------------
@@ -43,7 +43,7 @@ if "current_bmi" not in st.session_state:
     st.session_state["current_bmi"] = None
 
 # ---------------------- 1️⃣ 单样本预测（多选干预） ----------------------
-st.header("1️⃣ 单样本预测演示")
+st.header("1️. 单样本预测演示")
 
 st.subheader("输入6个核心菌群度值")
 g1 = st.number_input("普雷沃氏菌 (Prevotella)", value=0.2, min_value=0.0, max_value=1.0, step=0.01)
@@ -113,7 +113,7 @@ if predict_btn:
 
 # ---------------------- 2️⃣ CSV批量预测 ----------------------
 st.divider()
-st.header("2️⃣ CSV批量预测演示")
+st.header("2️. CSV批量预测演示")
 uploaded_file = st.file_uploader("上传菌群数据CSV文件", type="csv")
 
 if uploaded_file is not None:
@@ -138,7 +138,7 @@ if uploaded_file is not None:
 
 # ---------------------- 3️⃣ 多方案单项对比 ----------------------
 st.divider()
-st.header("3️⃣ 各单项方案效果对比")
+st.header("3️. 各单项方案效果对比")
 if st.button("📊 查看单项对比图表"):
     if st.session_state["current_bmi"] is None:
         st.warning("⚠️ 请先计算当前BMI！")
@@ -161,7 +161,7 @@ if st.button("📊 查看单项对比图表"):
 
 # ---------------------- 4️⃣ 长期追踪模拟 ----------------------
 st.divider()
-st.header("4️⃣ 长期动态追踪模拟")
+st.header("4️. 长期动态追踪模拟")
 if st.button("📈 启动长期追踪模拟"):
     base = st.session_state["current_bmi"] if st.session_state["current_bmi"] is not None else 25.0
     months = list(range(1, 9))
