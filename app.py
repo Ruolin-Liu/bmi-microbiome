@@ -1,4 +1,4 @@
-import streamlit as st
+    import streamlit as st
 import pandas as pd
 import random
 from datetime import datetime
@@ -97,12 +97,22 @@ if predict_btn:
 3个月后预估BMI由 {now_bmi} 降至 {pred_bmi}，综合下降 {total_drop}。
         """)
 
-        # ---------------------- 原生图表 · 中文正常 ----------------------
-        df_compare = pd.DataFrame({
-            "类型": ["当前BMI", "预测BMI"],
-            "数值": [now_bmi, pred_bmi]
-        })
-        st.bar_chart(df_compare, x="类型", y="数值", height=300)
+        # 对比柱状图（Matplotlib版，字体+方向完美控制）
+        fig, ax = plt.subplots(figsize=(8, 3))
+        bars = ax.bar(["当前BMI", "预测BMI"], [now_bmi, pred_bmi], color=["#FF6B6B", "#37BEB0"])
+
+        # 1. 调整横坐标文字方向，改成横着
+        plt.xticks(rotation=0, fontsize=12)
+        plt.yticks(fontsize=10)
+
+        # 2. 给柱子加上数值标签，更直观
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height + 0.2,
+                    f'{height}', ha='center', va='bottom', fontsize=11)
+
+        ax.set_ylim(0, max(now_bmi, pred_bmi) + 2)
+        st.pyplot(fig)
 
 # ---------------------- 2. CSV批量预测 ----------------------
 st.divider()
