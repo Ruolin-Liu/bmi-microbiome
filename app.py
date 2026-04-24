@@ -6,8 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ---------------------- 解决Matplotlib中文乱码 ----------------------
-plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei", "Noto Sans CJK JP", "SimHei"]
-plt.rcParams["axes.unicode_minus"] = False
+# 解决Matplotlib中文乱码（本地+Streamlit云端通用）
+import matplotlib
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ["WenQuanYi Zen Hei", "Noto Sans CJK JP", "SimHei", "Arial Unicode MS"]
+matplotlib.rcParams['axes.unicode_minus'] = False
 
 # ---------------------- 页面配置 ----------------------
 st.set_page_config(
