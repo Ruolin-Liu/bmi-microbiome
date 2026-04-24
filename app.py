@@ -5,23 +5,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-# 后面的代码...
+import streamlit as st
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+import shutil
 
-# ---------------------- 云端 + 本地 中文终极配置 ----------------------
+# --------------------- 【云端中文真正能用的代码】 ---------------------
+# 1. 清空 matplotlib 缓存（必须！）
+shutil.rmtree(matplotlib.get_cachedir(), ignore_errors=True)
 
+# 2. 加载项目里的字体
+font_path = "./SimHei.ttf"
+if os.path.exists(font_path):
+    fm.fontManager.addfont(font_path)
+    plt.rcParams['font.family'] = 'SimHei'
 
-# 解决负号乱码
-plt.rcParams["axes.unicode_minus"] = False
-
-# 云端 + 本地 双兼容字体设置（不依赖外部文件）
-try:
-    # 本地 Windows 环境：用 SimHei
-    plt.rcParams['font.sans-serif'] = ['SimHei']
-except:
-    # 云端 Linux 环境：用自带的文泉驿中文字体
-    plt.rcParams['font.sans-serif'] = ['WenQuanYi Zen Hei']
-
-plt.rcParams["axes.unicode_minus"] = False  # 解决负号乱码
+plt.rcParams['axes.unicode_minus'] = False  # 负号正常
 
 # ---------------------- 页面配置 ----------------------
 st.set_page_config(
