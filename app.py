@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ---------------------- 解决Matplotlib中文乱码 ----------------------
-plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei", "Noto Sans CJK JP", "SimHei"]
+plt.rcParams["font.sans-serif"] = ["SimHei"]
 plt.rcParams["axes.unicode_minus"] = False
 
 # ---------------------- 页面配置 ----------------------
@@ -41,9 +41,11 @@ bmi_pool = [26.5, 25.8, 24.3, 23.1, 27.2, 22.6]
 # ---------------------- 状态初始化 ----------------------
 if "current_bmi" not in st.session_state:
     st.session_state["current_bmi"] = None
+if "prediction_done" not in st.session_state:
+    st.session_state["prediction_done"] = False
 
 # ---------------------- 1️⃣ 单样本预测（多选干预） ----------------------
-st.header("1️. 单样本预测演示")
+st.header("1️⃣ 单样本预测演示")
 
 st.subheader("输入6个核心菌群度值")
 g1 = st.number_input("普雷沃氏菌 (Prevotella)", value=0.2, min_value=0.0, max_value=1.0, step=0.01)
@@ -57,6 +59,7 @@ g6 = st.number_input("菌群F", value=0.2, min_value=0.0, max_value=1.0, step=0.
 calc_bmi_btn = st.button("📊 计算当前BMI")
 if calc_bmi_btn:
     st.session_state["current_bmi"] = random.choice(bmi_pool)
+    st.session_state["prediction_done"] = False
     st.success(f"✅ 根据菌群估算 → 当前BMI：{st.session_state['current_bmi']}")
 elif st.session_state["current_bmi"] is None:
     st.info("👉 请先点击【计算当前BMI】按钮")
@@ -73,10 +76,6 @@ selected_list = st.multiselect(
 
 predict_btn = st.button("🔍 预测3个月后BMI")
 
-pred_bmi = 0.0
-total_drop = 0.0
-conf = 80
-
 if predict_btn:
     if st.session_state["current_bmi"] is None:
         st.warning("⚠️ 请先计算当前BMI！")
@@ -84,12 +83,15 @@ if predict_btn:
         st.warning("⚠️ 请至少选择一项干预方案！")
     else:
         now_bmi = st.session_state["current_bmi"]
-        # 多选下降值叠加
         total_drop = round(sum([single_drop[p] for p in selected_list]) * 0.85, 1)
         pred_bmi = round(now_bmi - total_drop, 1)
-
-        # 动态置信度
         conf = 85 - len(selected_list)*3
+
+        # 👇 把关键变量存到会话状态
+        st.session_state["prediction_done"] = True
+        st.session_state["pred_bmi"] = pred_bmi
+        st.session_state["total_drop"] = total_drop
+        st.session_state["conf"] = conf
 
         # 指标展示
         col_m1, col_m2, col_m3 = st.columns(3)
@@ -113,7 +115,7 @@ if predict_btn:
 
 # ---------------------- 2️⃣ CSV批量预测 ----------------------
 st.divider()
-st.header("2️. CSV批量预测演示")
+st.header("2️⃣ CSV批量预测演示")
 uploaded_file = st.file_uploader("上传菌群数据CSV文件", type="csv")
 
 if uploaded_file is not None:
@@ -138,7 +140,7 @@ if uploaded_file is not None:
 
 # ---------------------- 3️⃣ 多方案单项对比 ----------------------
 st.divider()
-st.header("3️. 各单项方案效果对比")
+st.header("3️⃣ 各单项方案效果对比")
 if st.button("📊 查看单项对比图表"):
     if st.session_state["current_bmi"] is None:
         st.warning("⚠️ 请先计算当前BMI！")
@@ -161,7 +163,7 @@ if st.button("📊 查看单项对比图表"):
 
 # ---------------------- 4️⃣ 长期追踪模拟 ----------------------
 st.divider()
-st.header("4️. 长期动态追踪模拟")
+st.header("4️⃣ 长期动态追踪模拟")
 if st.button("📈 启动长期追踪模拟"):
     base = st.session_state["current_bmi"] if st.session_state["current_bmi"] is not None else 25.0
     months = list(range(1, 9))
@@ -179,9 +181,13 @@ if st.button("📈 启动长期追踪模拟"):
 st.divider()
 st.header("📄 完整预测总报告")
 
-if st.session_state["current_bmi"] is not None and predict_btn and len(selected_list)>0:
+# 恢复原逻辑：点击预测后显示按钮
+if st.session_state["current_bmi"] is not None and st.session_state["prediction_done"]:
     now_bmi = st.session_state["current_bmi"]
     plan_text = "、".join(selected_list)
+    pred_bmi = st.session_state["pred_bmi"]
+    total_drop = st.session_state["total_drop"]
+    conf = st.session_state["conf"]
 
     report = f"""
 ==================== 肠道菌群-BMI 组合干预预测总报告 ====================
