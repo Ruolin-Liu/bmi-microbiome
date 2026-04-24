@@ -1,8 +1,14 @@
-    import streamlit as st
+import streamlit as st
 import pandas as pd
 import random
 from datetime import datetime
 import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+
+# ---------------------- 解决Matplotlib中文乱码 ----------------------
+matplotlib.rcParams['axes.unicode_minus'] = False
+matplotlib.rcParams['font.family'] = 'DejaVu Sans'
 
 # ---------------------- 页面配置 ----------------------
 st.set_page_config(
@@ -37,7 +43,7 @@ bmi_pool = [26.5, 25.8, 24.3, 23.1, 27.2, 22.6]
 if "current_bmi" not in st.session_state:
     st.session_state["current_bmi"] = None
 
-# ---------------------- 1. 单样本预测（多选干预） ----------------------
+# ---------------------- 1️. 单样本预测（多选干预） ----------------------
 st.header("1. 单样本预测演示")
 
 st.subheader("输入6个核心菌群度值")
@@ -58,7 +64,7 @@ elif st.session_state["current_bmi"] is None:
 else:
     st.success(f"✅ 已计算当前BMI：{st.session_state['current_bmi']}")
 
-# ========== 多选干预方案 ==========
+# ========== 改为多选框 ==========
 st.subheader("选择干预方案（可多选组合）")
 selected_list = st.multiselect(
     "支持自由组合多种生活干预方式",
@@ -79,8 +85,11 @@ if predict_btn:
         st.warning("⚠️ 请至少选择一项干预方案！")
     else:
         now_bmi = st.session_state["current_bmi"]
+        # 多选下降值叠加
         total_drop = round(sum([single_drop[p] for p in selected_list]) * 0.85, 1)
         pred_bmi = round(now_bmi - total_drop, 1)
+
+        # 动态置信度
         conf = 85 - len(selected_list)*3
 
         # 指标展示
@@ -97,24 +106,13 @@ if predict_btn:
 3个月后预估BMI由 {now_bmi} 降至 {pred_bmi}，综合下降 {total_drop}。
         """)
 
-        # 对比柱状图（Matplotlib版，字体+方向完美控制）
-        fig, ax = plt.subplots(figsize=(8, 3))
-        bars = ax.bar(["当前BMI", "预测BMI"], [now_bmi, pred_bmi], color=["#FF6B6B", "#37BEB0"])
-
-        # 1. 调整横坐标文字方向，改成横着
-        plt.xticks(rotation=0, fontsize=12)
-        plt.yticks(fontsize=10)
-
-        # 2. 给柱子加上数值标签，更直观
-        for bar in bars:
-            height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., height + 0.2,
-                    f'{height}', ha='center', va='bottom', fontsize=11)
-
-        ax.set_ylim(0, max(now_bmi, pred_bmi) + 2)
+        # 对比柱状图
+        fig, ax = plt.subplots(figsize=(6, 2.5))
+        ax.barh(['Current BMI', 'Predicted BMI'], [now_bmi, pred_bmi], color=["#FF6B6B", "#37BEB0"])
+        ax.set_xlim(0, 32)
         st.pyplot(fig)
 
-# ---------------------- 2. CSV批量预测 ----------------------
+# ---------------------- 2️. CSV批量预测 ----------------------
 st.divider()
 st.header("2. CSV批量预测演示")
 uploaded_file = st.file_uploader("上传菌群数据CSV文件", type="csv")
@@ -139,7 +137,7 @@ if uploaded_file is not None:
                 mime="text/csv"
             )
 
-# ---------------------- 3. 各单项方案效果对比 ----------------------
+# ---------------------- 3️. 多方案单项对比 ----------------------
 st.divider()
 st.header("3. 各单项方案效果对比")
 if st.button("📊 查看单项对比图表"):
@@ -148,30 +146,35 @@ if st.button("📊 查看单项对比图表"):
     else:
         plans = list(single_drop.keys())
         pred_list = [round(st.session_state["current_bmi"] - single_drop[p],1) for p in plans]
-        
-        # ---------------------- 原生图表 · 中文正常 ----------------------
-        df_plan = pd.DataFrame({
-            "干预方案": plans,
-            "预测BMI": pred_list
-        })
-        st.bar_chart(df_plan, x="干预方案", y="预测BMI", height=400)
-        best_p = plans[pred_list.index(min(pred_list))]
-        st.success(f"🏆 单项最优：{best_p}")
+        drop_list = [single_drop[p] for p in plans]
+        best_idx = drop_list.index(max(drop_list))
 
-# ---------------------- 4. 长期动态追踪模拟 ----------------------
+        fig, ax = plt.subplots(figsize=(9, 5))
+        bars = ax.bar(plans, pred_list, color=[plan_color[p] for p in plans])
+        ax.axhline(25, color='red', linestyle='--', label="Health Line BMI=25")
+        ax.set_ylim(18, 32)
+        ax.set_ylabel("Predicted BMI")
+        ax.set_title("Single Intervention Comparison")
+        bars[best_idx].set_edgecolor("gold")
+        bars[best_idx].set_linewidth(4)
+        st.pyplot(fig)
+        st.success(f"🏆 单项最优：{plans[best_idx]}，最大下降 {max(drop_list)}")
+
+# ---------------------- 4️. 长期追踪模拟 ----------------------
 st.divider()
 st.header("4. 长期动态追踪模拟")
 if st.button("📈 启动长期追踪模拟"):
     base = st.session_state["current_bmi"] if st.session_state["current_bmi"] is not None else 25.0
     months = list(range(1, 9))
     simulate = [base - (2.0 / 8) * i for i in months]
-    
-    # ---------------------- 原生图表 · 中文正常 ----------------------
-    df_line = pd.DataFrame({
-        "月份": months,
-        "BMI": simulate
-    })
-    st.line_chart(df_line, x="月份", y="BMI", height=400)
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(months, simulate, marker='o', linewidth=3, color="#2E8B57")
+    ax.axhline(25, color='red', linestyle='--', label="Health Line")
+    ax.set_xlabel("Month")
+    ax.set_ylabel("BMI")
+    ax.set_title("Long-term BMI Tracking")
+    ax.legend()
+    st.pyplot(fig)
 
 # ---------------------- 底部：完整总报告 ----------------------
 st.divider()
