@@ -8,14 +8,18 @@ from datetime import datetime
 # 后面的代码...
 
 # ---------------------- 云端 + 本地 中文终极配置 ----------------------
-# 1. 加载本地字体文件（云端也能读到）
-font_path = Path(__file__).parent / "SimHei.ttf"
-if font_path.exists():
-    mpl.font_manager.fontManager.addfont(str(font_path))
-    plt.rcParams["font.sans-serif"] = ["SimHei"]  # 全局用黑体
-else:
-    # 兜底：云端找不到时用 WenQuanYi（Linux 自带）
-    plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei"]
+
+
+# 解决负号乱码
+plt.rcParams["axes.unicode_minus"] = False
+
+# 云端 + 本地 双兼容字体设置（不依赖外部文件）
+try:
+    # 本地 Windows 环境：用 SimHei
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+except:
+    # 云端 Linux 环境：用自带的文泉驿中文字体
+    plt.rcParams['font.sans-serif'] = ['WenQuanYi Zen Hei']
 
 plt.rcParams["axes.unicode_minus"] = False  # 解决负号乱码
 
