@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
-from datetime.now
+from datetime import datetime
 import numpy as np
 
 # ---------------------- 页面配置 ----------------------
