@@ -3,11 +3,12 @@ import pandas as pd
 import random
 from datetime import datetime
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 # ---------------------- 解决Matplotlib中文乱码 ----------------------
-plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei", "Noto Sans CJK JP", "SimHei"]
-plt.rcParams["axes.unicode_minus"] = False
+matplotlib.rcParams['axes.unicode_minus'] = False
+matplotlib.rcParams['font.family'] = 'DejaVu Sans'
 
 # ---------------------- 页面配置 ----------------------
 st.set_page_config(
@@ -42,8 +43,8 @@ bmi_pool = [26.5, 25.8, 24.3, 23.1, 27.2, 22.6]
 if "current_bmi" not in st.session_state:
     st.session_state["current_bmi"] = None
 
-# ---------------------- 1️⃣ 单样本预测（多选干预） ----------------------
-st.header("1️. 单样本预测演示")
+# ---------------------- 1️. 单样本预测（多选干预） ----------------------
+st.header("1. 单样本预测演示")
 
 st.subheader("输入6个核心菌群度值")
 g1 = st.number_input("普雷沃氏菌 (Prevotella)", value=0.2, min_value=0.0, max_value=1.0, step=0.01)
@@ -107,13 +108,13 @@ if predict_btn:
 
         # 对比柱状图
         fig, ax = plt.subplots(figsize=(6, 2.5))
-        ax.barh(["当前BMI", "预测BMI"], [now_bmi, pred_bmi], color=["#FF6B6B", "#37BEB0"])
+        ax.barh(['Current BMI', 'Predicted BMI'], [now_bmi, pred_bmi], color=["#FF6B6B", "#37BEB0"])
         ax.set_xlim(0, 32)
         st.pyplot(fig)
 
-# ---------------------- 2️⃣ CSV批量预测 ----------------------
+# ---------------------- 2️. CSV批量预测 ----------------------
 st.divider()
-st.header("2️. CSV批量预测演示")
+st.header("2. CSV批量预测演示")
 uploaded_file = st.file_uploader("上传菌群数据CSV文件", type="csv")
 
 if uploaded_file is not None:
@@ -136,9 +137,9 @@ if uploaded_file is not None:
                 mime="text/csv"
             )
 
-# ---------------------- 3️⃣ 多方案单项对比 ----------------------
+# ---------------------- 3️. 多方案单项对比 ----------------------
 st.divider()
-st.header("3️. 各单项方案效果对比")
+st.header("3. 各单项方案效果对比")
 if st.button("📊 查看单项对比图表"):
     if st.session_state["current_bmi"] is None:
         st.warning("⚠️ 请先计算当前BMI！")
@@ -150,28 +151,28 @@ if st.button("📊 查看单项对比图表"):
 
         fig, ax = plt.subplots(figsize=(9, 5))
         bars = ax.bar(plans, pred_list, color=[plan_color[p] for p in plans])
-        ax.axhline(25, color='red', linestyle='--', label="健康临界值 BMI=25")
+        ax.axhline(25, color='red', linestyle='--', label="Health Line BMI=25")
         ax.set_ylim(18, 32)
-        ax.set_ylabel("预测BMI")
-        ax.set_title("单一干预方案效果对比")
+        ax.set_ylabel("Predicted BMI")
+        ax.set_title("Single Intervention Comparison")
         bars[best_idx].set_edgecolor("gold")
         bars[best_idx].set_linewidth(4)
         st.pyplot(fig)
         st.success(f"🏆 单项最优：{plans[best_idx]}，最大下降 {max(drop_list)}")
 
-# ---------------------- 4️⃣ 长期追踪模拟 ----------------------
+# ---------------------- 4️. 长期追踪模拟 ----------------------
 st.divider()
-st.header("4️. 长期动态追踪模拟")
+st.header("4. 长期动态追踪模拟")
 if st.button("📈 启动长期追踪模拟"):
     base = st.session_state["current_bmi"] if st.session_state["current_bmi"] is not None else 25.0
     months = list(range(1, 9))
     simulate = [base - (2.0 / 8) * i for i in months]
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.plot(months, simulate, marker='o', linewidth=3, color="#2E8B57")
-    ax.axhline(25, color='red', linestyle='--', label="健康临界值")
-    ax.set_xlabel("追踪月份")
-    ax.set_ylabel("BMI值")
-    ax.set_title("长期干预下动态BMI变化曲线")
+    ax.axhline(25, color='red', linestyle='--', label="Health Line")
+    ax.set_xlabel("Month")
+    ax.set_ylabel("BMI")
+    ax.set_title("Long-term BMI Tracking")
     ax.legend()
     st.pyplot(fig)
 
