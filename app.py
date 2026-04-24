@@ -1,16 +1,19 @@
 import streamlit as st
-import pandas as pd
-import random
-from datetime import datetime
-import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+from pathlib import Path
 
-# ---------------------- 万能中文兼容（本地+云端都不乱码） ----------------------
-plt.rcParams["axes.unicode_minus"] = False
-try:
-    plt.rcParams["font.sans-serif"] = ["SimHei"]  # 本地Windows
-except:
-    plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei"]  # 云端Linux
+# ---------------------- 云端 + 本地 中文终极配置 ----------------------
+# 1. 加载本地字体文件（云端也能读到）
+font_path = Path(__file__).parent / "SimHei.ttf"
+if font_path.exists():
+    mpl.font_manager.fontManager.addfont(str(font_path))
+    plt.rcParams["font.sans-serif"] = ["SimHei"]  # 全局用黑体
+else:
+    # 兜底：云端找不到时用 WenQuanYi（Linux 自带）
+    plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei"]
+
+plt.rcParams["axes.unicode_minus"] = False  # 解决负号乱码
 
 # ---------------------- 页面配置 ----------------------
 st.set_page_config(
