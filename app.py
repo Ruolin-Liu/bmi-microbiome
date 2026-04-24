@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ---------------------- 解决Matplotlib中文乱码 ----------------------
-plt.rcParams["font.sans-serif"] = ["SimHei"]
+plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei", "Noto Sans CJK JP", "SimHei"]
 plt.rcParams["axes.unicode_minus"] = False
 
 # ---------------------- 页面配置 ----------------------
