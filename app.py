@@ -60,7 +60,7 @@ div[data-testid="metric-container"] {
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Matplotlib 中文兼容（云端+本地 官方稳定版）
+# 2. Matplotlib 中文兼容（云端+本地）
 plt.rcParams["axes.unicode_minus"] = False
 try:
     plt.rcParams["font.sans-serif"] = ["SimHei"]
@@ -108,7 +108,7 @@ if "selected_list" not in st.session_state:
     st.session_state["selected_list"] = []
 
 # ---------------------- 1️⃣ 单样本预测模块 ----------------------
-st.header("1️⃣ 单样本预测演示")
+st.header("1️⃣ 单样本预测")
 st.markdown('<div class="stCard">', unsafe_allow_html=True)
 
 st.subheader("输入 6 个核心菌群度值")
@@ -169,22 +169,22 @@ if st.button("🔍 预测3个月后BMI"):
 3个月后预估BMI由 {now} 降至 {pred}，综合下降 {drop}。
         """)
 
-        # ---------------------- 官方标准写法 ----------------------
+        # 美化图表
         fig, ax = plt.subplots(figsize=(8, 3))
-        ax.barh(["当前BMI", "预测BMI"], [now, pred], color=["#FF6B6B", "#37BEB0"])
+        bars = ax.barh(["当前BMI", "预测BMI"], [now, pred], color=["#FF6B6B", "#37BEB0"])
         ax.set_xlim(0, 32)
         ax.set_title("BMI 变化对比", fontsize=14, fontweight="bold")
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
-        st.pyplot(fig, use_container_width=True)
+        st.pyplot(fig)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------- 2️⃣ CSV批量预测模块 ----------------------
 st.divider()
-st.header("2️⃣ CSV批量预测演示")
+st.header("2️⃣ CSV批量预测")
 st.markdown('<div class="stCard">', unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("上传菌群数据CSV文件", type="csv")
@@ -224,9 +224,8 @@ if st.button("📊 查看单项对比图表"):
         drop_list = [single_drop[p] for p in plans]
         best_idx = drop_list.index(max(drop_list))
 
-        # ---------------------- 官方标准写法 ----------------------
         fig, ax = plt.subplots(figsize=(10, 4))
-        ax.bar(plans, pred_list, color=[plan_color[p] for p in plans])
+        bars = ax.bar(plans, pred_list, color=[plan_color[p] for p in plans])
         ax.axhline(25, color='red', linestyle='--', label="健康临界值 BMI=25")
         ax.set_ylim(18, 32)
         ax.set_ylabel("预测BMI")
@@ -234,8 +233,7 @@ if st.button("📊 查看单项对比图表"):
         ax.legend()
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        st.pyplot(fig, use_container_width=True)
-        
+        st.pyplot(fig)
         st.success(f"🏆 单项最优：{plans[best_idx]}，最大下降 {max(drop_list)}")
 
 st.markdown('</div>', unsafe_allow_html=True)
@@ -249,8 +247,6 @@ if st.button("📈 启动长期追踪模拟"):
     base = st.session_state["current_bmi"] if st.session_state["current_bmi"] is not None else 25.0
     months = list(range(1, 9))
     simulate = [base - (2.0 / 8) * i for i in months]
-    
-    # ---------------------- 官方标准写法 ----------------------
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(months, simulate, marker='o', linewidth=3, color="#2E8B57")
     ax.axhline(25, color='red', linestyle='--', label="健康临界值")
@@ -260,7 +256,7 @@ if st.button("📈 启动长期追踪模拟"):
     ax.legend()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    st.pyplot(fig, use_container_width=True)
+    st.pyplot(fig)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
