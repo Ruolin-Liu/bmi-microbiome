@@ -45,8 +45,7 @@ st.markdown("""
 </p>
 """, unsafe_allow_html=True)
 
-# ---------------------- 【扩大方案库】----------------------
-# 👉 这里增加了更多饮食/运动方案
+# ---------------------- 干预方案 ----------------------
 single_drop = {
     "高纤维饮食": 2.3,
     "低碳水饮食": 1.2,
@@ -140,15 +139,19 @@ if st.button("🔍 预测3个月后BMI"):
 3个月后预估BMI由 {now} 降至 {pred}，综合下降 {drop}。
         """)
 
-        # ----------------------
-        # 【替换：竖版点图 + 健康区间】
-        # ----------------------
-        fig, ax = plt.subplots(figsize=(3, 5))
-        ax.scatter([1, 1], [now, pred], s=200, c=["#FF6B6B", "#37BEB0"])
-        ax.axhline(y=24, color='red', linestyle='--', linewidth=1.5, label="健康上限")
-        ax.fill_between([0.5, 1.5], 18.5, 24, color="green", alpha=0.1)
+        # ==========================
+        # ✅ 第一幅图：竖版 + 非点图 + 健康区间
+        # ==========================
+        fig, ax = plt.subplots(figsize=(3, 6))
+        categories = ["当前BMI", "预测BMI"]
+        values = [now, pred]
+        colors = ["#ff4d4d", "#33b864"]
+
+        ax.bar(categories, values, color=colors, width=0.4)
+        ax.axhline(y=24, color='red', linestyle='--', linewidth=2, label="健康上限 BMI=24")
+        ax.fill_between([-0.5, 1.5], 18.5, 24, color="green", alpha=0.1)
         ax.set_ylim(17, 30)
-        ax.set_xticks([])
+        ax.set_title("BMI 变化对比", fontsize=14, fontweight="bold")
         ax.legend()
         st.pyplot(fig)
 
@@ -180,9 +183,9 @@ if uploaded_file is not None:
             )
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------- 3️⃣ 【全部方案对比：点图版】----------------------
+# ---------------------- 3️⃣ 方案对比 ----------------------
 st.divider()
-st.header("3️⃣ 各干预方案效果对比（无柱状图）")
+st.header("3️⃣ 各干预方案效果对比（竖版）")
 st.markdown('<div class="stCard">', unsafe_allow_html=True)
 
 if st.button("📊 查看所有方案对比"):
@@ -194,21 +197,28 @@ if st.button("📊 查看所有方案对比"):
         fut_bmi = [round(now - single_drop[p], 1) for p in names]
         colors = [plan_color[p] for p in names]
 
-        fig, ax = plt.subplots(figsize=(7, 5))
-        ax.scatter(fut_bmi, names, s=220, c=colors, alpha=0.9)
-        ax.axvline(24, color='red', linestyle='--', linewidth=1.5, label="健康BMI上限")
-        ax.axvspan(18.5, 24, color="green", alpha=0.1)
-        ax.set_xlim(20, 30)
-        ax.set_title("各方案预测BMI对比（点图版）", fontsize=14, fontweight="bold")
-        ax.set_xlabel("BMI")
+        # ==========================
+        # ✅ 第二幅图：竖版点图（你要的竖着）
+        # ==========================
+        fig, ax = plt.subplots(figsize=(6, 7))
+        ax.scatter(np.zeros(len(fut_bmi)), fut_bmi, s=300, c=colors, alpha=0.9)
+
+        for i, txt in enumerate(names):
+            ax.text(0.05, fut_bmi[i], txt, fontsize=12, verticalalignment="center")
+
+        ax.axhline(y=24, color='red', linestyle='--', linewidth=2, label="健康BMI上限")
+        ax.fill_between([-0.5, 0.5], 18.5, 24, color="green", alpha=0.1)
+        ax.set_ylim(20, 30)
+        ax.set_xticks([])
+        ax.set_title("各方案BMI对比（竖版）", fontsize=14, fontweight="bold")
         ax.legend()
         st.pyplot(fig)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------- 4️⃣ 【长期模拟：每个方案独立曲线 + 自然波动】----------------------
+# ---------------------- 4️⃣ 长期模拟 ----------------------
 st.divider()
-st.header("4️⃣ 长期动态追踪（每个方案独立曲线）")
+st.header("4️⃣ 长期动态追踪")
 st.markdown('<div class="stCard">', unsafe_allow_html=True)
 
 if st.button("📈 启动长期模拟（多方案对比）"):
@@ -217,7 +227,6 @@ if st.button("📈 启动长期模拟（多方案对比）"):
 
     fig, ax = plt.subplots(figsize=(10, 5))
 
-    # 每个方案一条独立曲线 + 自然波动
     for plan, drop_val in single_drop.items():
         total_drop = drop_val * 1.2
         bmi_series = [base]
@@ -233,7 +242,7 @@ if st.button("📈 启动长期模拟（多方案对比）"):
 
     ax.axhline(24, color='red', linestyle='--', linewidth=1.5, label="健康上限")
     ax.fill_between(range(9), 18.5, 24, color="green", alpha=0.1)
-    ax.set_title("长期BMI变化（多方案对比·含自然波动）", fontsize=14, fontweight="bold")
+    ax.set_title("长期BMI变化（多方案对比）", fontsize=14, fontweight="bold")
     ax.set_xlabel("月份")
     ax.set_ylabel("BMI")
     ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
