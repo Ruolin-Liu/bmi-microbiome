@@ -4,6 +4,12 @@ import random
 from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+mpl.font_manager.fontManager.addfont("fonts/SimHei.ttf")
+plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['axes.unicode_minus'] = False
 
 # ---------------------- 全局美化配置 ----------------------
 # 1. 全局中文字体 + 美化样式注入
