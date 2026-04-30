@@ -5,82 +5,39 @@ from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 
+# ---------------------- 中文字体 ----------------------
 mpl.font_manager.fontManager.addfont("fonts/SimHei.ttf")
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 
 # ---------------------- 全局美化配置 ----------------------
-# 1. 全局中文字体 + 美化样式注入
 st.markdown("""
 <style>
-/* 引入优雅的 Google 中文字体 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
-
-/* 全局字体与背景美化 */
 html, body, [class*="css"] {
     font-family: 'Noto Sans SC', sans-serif !important;
     background-color: #f8fafc;
 }
-
-/* 主标题美化 */
-h1 {
-    color: #1e293b;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-/* 卡片式组件美化 */
+h1 { color: #1e293b; font-weight: 700; }
 div.stCard {
     background-color: white;
     padding: 1.5rem;
     border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     margin-bottom: 1rem;
-}
-
-/* 按钮美化 */
-.stButton>button {
-    border-radius: 0.75rem;
-    background-color: #3b82f6;
-    color: white;
-    font-weight: 500;
-    border: none;
-    padding: 0.6rem 1.2rem;
-    transition: all 0.3s ease;
-}
-.stButton>button:hover {
-    background-color: #2563eb;
-    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
-    transform: translateY(-2px);
-}
-
-/* 指标卡片美化 */
-div[data-testid="metric-container"] {
-    background-color: white;
-    border-radius: 1rem;
-    padding: 1rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Matplotlib 中文兼容（云端+本地）
-plt.rcParams["axes.unicode_minus"] = False
-try:
-    plt.rcParams["font.sans-serif"] = ["SimHei"]
-except:
-    plt.rcParams["font.sans-serif"] = ["WenQuanYi Zen Hei"]
-
-# ---------------------- 基础配置 ----------------------
+# ---------------------- 页面配置 ----------------------
 st.set_page_config(
     page_title="菌群-BMI 智能预测",
     page_icon="🧬",
     layout="wide"
 )
 
-# ---------------------- 标题区 ----------------------
+# ---------------------- 标题 ----------------------
 st.title("🧬 核心菌群度值 → BMI 智能预测系统")
 st.markdown("""
 <p style="color: #64748b; font-size: 1.1rem;">
@@ -88,17 +45,28 @@ st.markdown("""
 </p>
 """, unsafe_allow_html=True)
 
-# ---------------------- 数据定义 ----------------------
+# ---------------------- 【扩大方案库】----------------------
+# 👉 这里增加了更多饮食/运动方案
 single_drop = {
     "高纤维饮食": 2.3,
     "低碳水饮食": 1.2,
-    "有氧运动": 1.5
+    "有氧运动": 1.5,
+    "地中海饮食": 1.8,
+    "间歇性断食": 2.0,
+    "高蛋白饮食": 1.6,
+    "低油低盐饮食": 1.1
 }
+
 plan_color = {
     "高纤维饮食": "#2E8B57",
     "低碳水饮食": "#4682B4",
-    "有氧运动": "#CD853F"
+    "有氧运动": "#CD853F",
+    "地中海饮食": "#9B59B6",
+    "间歇性断食": "#E74C3C",
+    "高蛋白饮食": "#F39C12",
+    "低油低盐饮食": "#1ABC9C"
 }
+
 bmi_pool = [26.5, 25.8, 24.3, 23.1, 27.2, 22.6]
 
 # ---------------------- 状态初始化 ----------------------
@@ -113,7 +81,7 @@ if "conf" not in st.session_state:
 if "selected_list" not in st.session_state:
     st.session_state["selected_list"] = []
 
-# ---------------------- 1️⃣ 单样本预测模块 ----------------------
+# ---------------------- 1️⃣ 单样本预测 ----------------------
 st.header("1️⃣ 单样本预测")
 st.markdown('<div class="stCard">', unsafe_allow_html=True)
 
@@ -129,7 +97,6 @@ with col3:
     g3 = st.number_input("菌群C", value=0.1, min_value=0.0, max_value=1.0, step=0.01)
     g6 = st.number_input("菌群F", value=0.2, min_value=0.0, max_value=1.0, step=0.01)
 
-# 计算 BMI
 if st.button("📊 计算当前BMI"):
     st.session_state["current_bmi"] = random.choice(bmi_pool)
 
@@ -138,7 +105,6 @@ if st.session_state["current_bmi"]:
 else:
     st.info("👉 请先点击【计算当前BMI】按钮")
 
-# 选择干预方案
 st.subheader("选择干预方案（可多选组合）")
 selected_list = st.multiselect(
     "支持自由组合多种生活干预方式",
@@ -162,7 +128,6 @@ if st.button("🔍 预测3个月后BMI"):
         st.session_state["conf"] = conf
         st.session_state["selected_list"] = selected_list
 
-        # 指标卡片
         c1, c2, c3 = st.columns(3)
         c1.metric("当前BMI", now)
         c2.metric("预测BMI", pred, delta=f"-{drop}")
@@ -175,24 +140,24 @@ if st.button("🔍 预测3个月后BMI"):
 3个月后预估BMI由 {now} 降至 {pred}，综合下降 {drop}。
         """)
 
-        # 美化图表
-        fig, ax = plt.subplots(figsize=(8, 3))
-        bars = ax.barh(["当前BMI", "预测BMI"], [now, pred], color=["#FF6B6B", "#37BEB0"])
-        ax.set_xlim(0, 32)
-        ax.set_title("BMI 变化对比", fontsize=14, fontweight="bold")
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
+        # ----------------------
+        # 【替换：竖版点图 + 健康区间】
+        # ----------------------
+        fig, ax = plt.subplots(figsize=(3, 5))
+        ax.scatter([1, 1], [now, pred], s=200, c=["#FF6B6B", "#37BEB0"])
+        ax.axhline(y=24, color='red', linestyle='--', linewidth=1.5, label="健康上限")
+        ax.fill_between([0.5, 1.5], 18.5, 24, color="green", alpha=0.1)
+        ax.set_ylim(17, 30)
+        ax.set_xticks([])
+        ax.legend()
         st.pyplot(fig)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------- 2️⃣ CSV批量预测模块 ----------------------
+# ---------------------- 2️⃣ CSV批量预测 ----------------------
 st.divider()
 st.header("2️⃣ CSV批量预测")
 st.markdown('<div class="stCard">', unsafe_allow_html=True)
-
 uploaded_file = st.file_uploader("上传菌群数据CSV文件", type="csv")
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
@@ -213,60 +178,70 @@ if uploaded_file is not None:
                 file_name="批量BMI预测结果.csv",
                 mime="text/csv"
             )
-
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------- 3️⃣ 单项方案对比模块 ----------------------
+# ---------------------- 3️⃣ 【全部方案对比：点图版】----------------------
 st.divider()
-st.header("3️⃣ 各单项方案效果对比")
+st.header("3️⃣ 各干预方案效果对比（无柱状图）")
 st.markdown('<div class="stCard">', unsafe_allow_html=True)
 
-if st.button("📊 查看单项对比图表"):
+if st.button("📊 查看所有方案对比"):
     if not st.session_state["current_bmi"]:
         st.warning("⚠️ 请先计算当前BMI！")
     else:
-        plans = list(single_drop.keys())
-        pred_list = [round(st.session_state["current_bmi"] - single_drop[p],1) for p in plans]
-        drop_list = [single_drop[p] for p in plans]
-        best_idx = drop_list.index(max(drop_list))
+        now = st.session_state["current_bmi"]
+        names = list(single_drop.keys())
+        fut_bmi = [round(now - single_drop[p], 1) for p in names]
+        colors = [plan_color[p] for p in names]
 
-        fig, ax = plt.subplots(figsize=(10, 4))
-        bars = ax.bar(plans, pred_list, color=[plan_color[p] for p in plans])
-        ax.axhline(25, color='red', linestyle='--', label="健康临界值 BMI=25")
-        ax.set_ylim(18, 32)
-        ax.set_ylabel("预测BMI")
-        ax.set_title("单一干预方案效果对比", fontsize=14, fontweight="bold")
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax.scatter(fut_bmi, names, s=220, c=colors, alpha=0.9)
+        ax.axvline(24, color='red', linestyle='--', linewidth=1.5, label="健康BMI上限")
+        ax.axvspan(18.5, 24, color="green", alpha=0.1)
+        ax.set_xlim(20, 30)
+        ax.set_title("各方案预测BMI对比（点图版）", fontsize=14, fontweight="bold")
+        ax.set_xlabel("BMI")
         ax.legend()
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
         st.pyplot(fig)
-        st.success(f"🏆 单项最优：{plans[best_idx]}，最大下降 {max(drop_list)}")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------- 4️⃣ 长期追踪模拟模块 ----------------------
+# ---------------------- 4️⃣ 【长期模拟：每个方案独立曲线 + 自然波动】----------------------
 st.divider()
-st.header("4️⃣ 长期动态追踪模拟")
+st.header("4️⃣ 长期动态追踪（每个方案独立曲线）")
 st.markdown('<div class="stCard">', unsafe_allow_html=True)
 
-if st.button("📈 启动长期追踪模拟"):
-    base = st.session_state["current_bmi"] if st.session_state["current_bmi"] is not None else 25.0
-    months = list(range(1, 9))
-    simulate = [base - (2.0 / 8) * i for i in months]
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(months, simulate, marker='o', linewidth=3, color="#2E8B57")
-    ax.axhline(25, color='red', linestyle='--', label="健康临界值")
-    ax.set_xlabel("追踪月份")
-    ax.set_ylabel("BMI值")
-    ax.set_title("长期干预下动态BMI变化曲线", fontsize=14, fontweight="bold")
-    ax.legend()
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
+if st.button("📈 启动长期模拟（多方案对比）"):
+    base = st.session_state["current_bmi"] if st.session_state["current_bmi"] else 25.0
+    months = np.arange(1, 9)
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    # 每个方案一条独立曲线 + 自然波动
+    for plan, drop_val in single_drop.items():
+        total_drop = drop_val * 1.2
+        bmi_series = [base]
+        for m in months:
+            change = total_drop / 8 + random.uniform(-0.12, 0.12)
+            next_val = bmi_series[-1] - change
+            bmi_series.append(next_val)
+        ax.plot(
+            range(9), bmi_series,
+            marker='o', linewidth=2,
+            label=plan, color=plan_color[plan]
+        )
+
+    ax.axhline(24, color='red', linestyle='--', linewidth=1.5, label="健康上限")
+    ax.fill_between(range(9), 18.5, 24, color="green", alpha=0.1)
+    ax.set_title("长期BMI变化（多方案对比·含自然波动）", fontsize=14, fontweight="bold")
+    ax.set_xlabel("月份")
+    ax.set_ylabel("BMI")
+    ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
     st.pyplot(fig)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------- 底部：完整总报告 ----------------------
+# ---------------------- 报告 ----------------------
 st.divider()
 st.header("📄 完整预测总报告")
 st.markdown('<div class="stCard">', unsafe_allow_html=True)
@@ -295,10 +270,14 @@ report = f"""
 综合下降幅度：{total_drop}
 模型综合置信度：{conf}%
 
-【单项方案参考下降值】
+【所有方案参考下降值】
 高纤维饮食：2.3
 低碳水饮食：1.2
 有氧运动：1.5
+地中海饮食：1.8
+间歇性断食：2.0
+高蛋白饮食：1.6
+低油低盐饮食：1.1
 
 【模型说明】
 本系统基于肠道菌群大数据AI模型，
