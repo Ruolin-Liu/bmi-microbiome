@@ -32,62 +32,78 @@ div.stCard {
 
 # ---------------------- 页面配置 ----------------------
 st.set_page_config(
-    page_title="菌群-BMI预测演示",
+    page_title="菌群-BMI 智能预测",
     page_icon="🧬",
     layout="wide"
 )
 
-# ---------------------- 标题和说明 ----------------------
-st.title("🧬 核心菌群度值 → BMI 预测系统")
+# ---------------------- 标题 ----------------------
+st.title("🧬 核心菌群度值 → BMI 智能预测系统")
 st.markdown("""
-> 输入肠道菌群数据，支持**多干预方案自由组合**，实现BMI智能预测。
-""")
+<p style="color: #64748b; font-size: 1.1rem;">
+输入肠道菌群数据，支持多干预方案自由组合，个性化评估 BMI 变化趋势。
+</p>
+""", unsafe_allow_html=True)
 
-# ---------------------- 基础方案下降值 ----------------------
+# ---------------------- 干预方案 ----------------------
 single_drop = {
     "高纤维饮食": 2.3,
     "低碳水饮食": 1.2,
-    "有氧运动": 1.5
+    "有氧运动": 1.5,
+    "地中海饮食": 1.8,
+    "间歇性断食": 2.0,
+    "高蛋白饮食": 1.6,
+    "低油低盐饮食": 1.1
 }
 
 plan_color = {
     "高纤维饮食": "#2E8B57",
     "低碳水饮食": "#4682B4",
-    "有氧运动": "#CD853F"
+    "有氧运动": "#CD853F",
+    "地中海饮食": "#9B59B6",
+    "间歇性断食": "#E74C3C",
+    "高蛋白饮食": "#F39C12",
+    "低油低盐饮食": "#1ABC9C"
 }
 
-# ---------------------- 随机BMI池 ----------------------
 bmi_pool = [26.5, 25.8, 24.3, 23.1, 27.2, 22.6]
 
 # ---------------------- 状态初始化 ----------------------
 if "current_bmi" not in st.session_state:
     st.session_state["current_bmi"] = None
-if "prediction_done" not in st.session_state:
-    st.session_state["prediction_done"] = False
+if "pred_bmi" not in st.session_state:
+    st.session_state["pred_bmi"] = 0.0
+if "total_drop" not in st.session_state:
+    st.session_state["total_drop"] = 0.0
+if "conf" not in st.session_state:
+    st.session_state["conf"] = 80
+if "selected_list" not in st.session_state:
+    st.session_state["selected_list"] = []
 
-# ---------------------- 1️⃣ 单样本预测（多选干预） ----------------------
-st.header("1️. 单样本预测演示")
+# ---------------------- 1️⃣ 单样本预测 ----------------------
+st.header("1️⃣ 单样本预测")
+st.markdown('<div class="stCard">', unsafe_allow_html=True)
 
-st.subheader("输入6个核心菌群度值")
-g1 = st.number_input("普雷沃氏菌 (Prevotella)", value=0.2, min_value=0.0, max_value=1.0, step=0.01)
-g2 = st.number_input("拟杆菌 (Bacteroides)", value=0.5, min_value=0.0, max_value=1.0, step=0.01)
-g3 = st.number_input("菌群C", value=0.1, min_value=0.0, max_value=1.0, step=0.01)
-g4 = st.number_input("菌群D", value=0.3, min_value=0.0, max_value=1.0, step=0.01)
-g5 = st.number_input("菌群E", value=0.4, min_value=0.0, max_value=1.0, step=0.01)
-g6 = st.number_input("菌群F", value=0.2, min_value=0.0, max_value=1.0, step=0.01)
+st.subheader("输入 6 个核心菌群度值")
+col1, col2, col3 = st.columns(3)
+with col1:
+    g1 = st.number_input("普雷沃氏菌 (Prevotella)", value=0.2, min_value=0.0, max_value=1.0, step=0.01)
+    g4 = st.number_input("菌群D", value=0.3, min_value=0.0, max_value=1.0, step=0.01)
+with col2:
+    g2 = st.number_input("拟杆菌 (Bacteroides)", value=0.5, min_value=0.0, max_value=1.0, step=0.01)
+    g5 = st.number_input("菌群E", value=0.4, min_value=0.0, max_value=1.0, step=0.01)
+with col3:
+    g3 = st.number_input("菌群C", value=0.1, min_value=0.0, max_value=1.0, step=0.01)
+    g6 = st.number_input("菌群F", value=0.2, min_value=0.0, max_value=1.0, step=0.01)
 
-# 计算当前BMI
-calc_bmi_btn = st.button("📊 计算当前BMI")
-if calc_bmi_btn:
+if st.button("📊 计算当前BMI"):
     st.session_state["current_bmi"] = random.choice(bmi_pool)
-    st.session_state["prediction_done"] = False
-    st.success(f"✅ 根据菌群估算 → 当前BMI：{st.session_state['current_bmi']}")
-elif st.session_state["current_bmi"] is None:
-    st.info("👉 请先点击【计算当前BMI】按钮")
-else:
-    st.success(f"✅ 已计算当前BMI：{st.session_state['current_bmi']}")
 
-# ========== 改为多选框 ==========
+if st.session_state["current_bmi"]:
+    st.success(f"✅ 已计算当前BMI：{st.session_state['current_bmi']}")
+else:
+    st.info("👉 请先点击【计算当前BMI】按钮")
+
 st.subheader("选择干预方案（可多选组合）")
 selected_list = st.multiselect(
     "支持自由组合多种生活干预方式",
@@ -95,54 +111,61 @@ selected_list = st.multiselect(
     default=["高纤维饮食"]
 )
 
-predict_btn = st.button("🔍 预测3个月后BMI")
-
-if predict_btn:
-    if st.session_state["current_bmi"] is None:
+if st.button("🔍 预测3个月后BMI"):
+    if not st.session_state["current_bmi"]:
         st.warning("⚠️ 请先计算当前BMI！")
-    elif len(selected_list) == 0:
+    elif not selected_list:
         st.warning("⚠️ 请至少选择一项干预方案！")
     else:
-        now_bmi = st.session_state["current_bmi"]
-        total_drop = round(sum([single_drop[p] for p in selected_list]) * 0.85, 1)
-        pred_bmi = round(now_bmi - total_drop, 1)
+        now = st.session_state["current_bmi"]
+        drop = round(sum(single_drop[p] for p in selected_list) * 0.85, 1)
+        pred = round(now - drop, 1)
         conf = 85 - len(selected_list)*3
 
-        # 👇 把关键变量存到会话状态
-        st.session_state["prediction_done"] = True
-        st.session_state["pred_bmi"] = pred_bmi
-        st.session_state["total_drop"] = total_drop
+        st.session_state["pred_bmi"] = pred
+        st.session_state["total_drop"] = drop
         st.session_state["conf"] = conf
+        st.session_state["selected_list"] = selected_list
 
-        # 指标展示
-        col_m1, col_m2, col_m3 = st.columns(3)
-        col_m1.metric("当前BMI", now_bmi)
-        col_m2.metric("预测BMI", pred_bmi, delta=f"-{total_drop}")
-        col_m3.metric("模型置信度", f"{conf}%")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("当前BMI", now)
+        c2.metric("预测BMI", pred, delta=f"-{drop}")
+        c3.metric("模型置信度", f"{conf}%")
 
-        # 组合文案
         plan_text = "、".join(selected_list)
         st.info(f"""
 💡 本次选择干预组合：【{plan_text}】
 基于肠道菌群SCI预测模型（R²=0.72），
-3个月后预估BMI由 {now_bmi} 降至 {pred_bmi}，综合下降 {total_drop}。
+3个月后预估BMI由 {now} 降至 {pred}，综合下降 {drop}。
         """)
 
-        # 对比柱状图
-        fig, ax = plt.subplots(figsize=(6, 2.5))
-        ax.barh(["当前BMI", "预测BMI"], [now_bmi, pred_bmi], color=["#FF6B6B", "#37BEB0"])
-        ax.set_xlim(0, 32)
+        # ==========================
+        # ✅ 第一幅图：竖版 + 非点图 + 健康区间
+        # ==========================
+        fig, ax = plt.subplots(figsize=(3, 6))
+        categories = ["当前BMI", "预测BMI"]
+        values = [now, pred]
+        colors = ["#ff4d4d", "#33b864"]
+
+        ax.bar(categories, values, color=colors, width=0.4)
+        ax.axhline(y=24, color='red', linestyle='--', linewidth=2, label="健康上限 BMI=24")
+        ax.fill_between([-0.5, 1.5], 18.5, 24, color="green", alpha=0.1)
+        ax.set_ylim(17, 30)
+        ax.set_title("BMI 变化对比", fontsize=14, fontweight="bold")
+        ax.legend()
         st.pyplot(fig)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------- 2️⃣ CSV批量预测 ----------------------
 st.divider()
-st.header("2️. CSV批量预测演示")
+st.header("2️⃣ CSV批量预测")
+st.markdown('<div class="stCard">', unsafe_allow_html=True)
 uploaded_file = st.file_uploader("上传菌群数据CSV文件", type="csv")
-
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     st.subheader("原始数据预览")
-    st.dataframe(df.head())
+    st.dataframe(df.head(), use_container_width=True)
 
     if st.button("批量预测"):
         with st.spinner("正在批量处理数据..."):
@@ -150,7 +173,7 @@ if uploaded_file is not None:
             df["预测BMI"] = round(df["当前BMI"] - 2.3, 1)
             df["体型分类"] = ["正常" if x < 25 else "超重" for x in df["预测BMI"]]
             st.success("✅ 批量预测完成！")
-            st.dataframe(df)
+            st.dataframe(df, use_container_width=True)
 
             st.download_button(
                 label="📥 下载批量预测结果",
@@ -158,59 +181,87 @@ if uploaded_file is not None:
                 file_name="批量BMI预测结果.csv",
                 mime="text/csv"
             )
+st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------- 3️⃣ 多方案单项对比 ----------------------
+# ---------------------- 3️⃣ 方案对比 ----------------------
 st.divider()
-st.header("3️. 各单项方案效果对比")
-if st.button("📊 查看单项对比图表"):
-    if st.session_state["current_bmi"] is None:
+st.header("3️⃣ 各干预方案效果对比（竖版）")
+st.markdown('<div class="stCard">', unsafe_allow_html=True)
+
+if st.button("📊 查看所有方案对比"):
+    if not st.session_state["current_bmi"]:
         st.warning("⚠️ 请先计算当前BMI！")
     else:
-        plans = list(single_drop.keys())
-        pred_list = [round(st.session_state["current_bmi"] - single_drop[p],1) for p in plans]
-        drop_list = [single_drop[p] for p in plans]
-        best_idx = drop_list.index(max(drop_list))
+        now = st.session_state["current_bmi"]
+        names = list(single_drop.keys())
+        fut_bmi = [round(now - single_drop[p], 1) for p in names]
+        colors = [plan_color[p] for p in names]
 
-        fig, ax = plt.subplots(figsize=(9, 5))
-        bars = ax.bar(plans, pred_list, color=[plan_color[p] for p in plans])
-        ax.axhline(25, color='red', linestyle='--', label="健康临界值 BMI=25")
-        ax.set_ylim(18, 32)
-        ax.set_ylabel("预测BMI")
-        ax.set_title("单一干预方案效果对比")
-        bars[best_idx].set_edgecolor("gold")
-        bars[best_idx].set_linewidth(4)
+        # ==========================
+        # ✅ 第二幅图：竖版点图（你要的竖着）
+        # ==========================
+        fig, ax = plt.subplots(figsize=(6, 7))
+        ax.scatter(np.zeros(len(fut_bmi)), fut_bmi, s=300, c=colors, alpha=0.9)
+
+        for i, txt in enumerate(names):
+            ax.text(0.05, fut_bmi[i], txt, fontsize=12, verticalalignment="center")
+
+        ax.axhline(y=24, color='red', linestyle='--', linewidth=2, label="健康BMI上限")
+        ax.fill_between([-0.5, 0.5], 18.5, 24, color="green", alpha=0.1)
+        ax.set_ylim(20, 30)
+        ax.set_xticks([])
+        ax.set_title("各方案BMI对比（竖版）", fontsize=14, fontweight="bold")
+        ax.legend()
         st.pyplot(fig)
-        st.success(f"🏆 单项最优：{plans[best_idx]}，最大下降 {max(drop_list)}")
 
-# ---------------------- 4️⃣ 长期追踪模拟 ----------------------
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ---------------------- 4️⃣ 长期模拟 ----------------------
 st.divider()
-st.header("4️. 长期动态追踪模拟")
-if st.button("📈 启动长期追踪模拟"):
-    base = st.session_state["current_bmi"] if st.session_state["current_bmi"] is not None else 25.0
-    months = list(range(1, 9))
-    simulate = [base - (2.0 / 8) * i for i in months]
-    fig, ax = plt.subplots(figsize=(9, 5))
-    ax.plot(months, simulate, marker='o', linewidth=3, color="#2E8B57")
-    ax.axhline(25, color='red', linestyle='--', label="健康临界值")
-    ax.set_xlabel("追踪月份")
-    ax.set_ylabel("BMI值")
-    ax.set_title("长期干预下动态BMI变化曲线")
-    ax.legend()
+st.header("4️⃣ 长期动态追踪")
+st.markdown('<div class="stCard">', unsafe_allow_html=True)
+
+if st.button("📈 启动长期模拟（多方案对比）"):
+    base = st.session_state["current_bmi"] if st.session_state["current_bmi"] else 25.0
+    months = np.arange(1, 9)
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    for plan, drop_val in single_drop.items():
+        total_drop = drop_val * 1.2
+        bmi_series = [base]
+        for m in months:
+            change = total_drop / 8 + random.uniform(-0.12, 0.12)
+            next_val = bmi_series[-1] - change
+            bmi_series.append(next_val)
+        ax.plot(
+            range(9), bmi_series,
+            marker='o', linewidth=2,
+            label=plan, color=plan_color[plan]
+        )
+
+    ax.axhline(24, color='red', linestyle='--', linewidth=1.5, label="健康上限")
+    ax.fill_between(range(9), 18.5, 24, color="green", alpha=0.1)
+    ax.set_title("长期BMI变化（多方案对比）", fontsize=14, fontweight="bold")
+    ax.set_xlabel("月份")
+    ax.set_ylabel("BMI")
+    ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
     st.pyplot(fig)
 
-# ---------------------- 底部：完整总报告 ----------------------
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ---------------------- 报告 ----------------------
 st.divider()
 st.header("📄 完整预测总报告")
+st.markdown('<div class="stCard">', unsafe_allow_html=True)
 
-# 恢复原逻辑：点击预测后显示按钮
-if st.session_state["current_bmi"] is not None and st.session_state["prediction_done"]:
-    now_bmi = st.session_state["current_bmi"]
-    plan_text = "、".join(selected_list)
-    pred_bmi = st.session_state["pred_bmi"]
-    total_drop = st.session_state["total_drop"]
-    conf = st.session_state["conf"]
+now_bmi = st.session_state.get("current_bmi", "未计算")
+pred_bmi = st.session_state.get("pred_bmi", "未预测")
+total_drop = st.session_state.get("total_drop", "无")
+conf = st.session_state.get("conf", "无")
+plan_text = "、".join(st.session_state.get("selected_list", [])) or "未选择"
 
-    report = f"""
+report = f"""
 ==================== 肠道菌群-BMI 组合干预预测总报告 ====================
 生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
@@ -228,21 +279,26 @@ if st.session_state["current_bmi"] is not None and st.session_state["prediction_
 综合下降幅度：{total_drop}
 模型综合置信度：{conf}%
 
-【单项方案参考下降值】
+【所有方案参考下降值】
 高纤维饮食：2.3
 低碳水饮食：1.2
 有氧运动：1.5
+地中海饮食：1.8
+间歇性断食：2.0
+高蛋白饮食：1.6
+低油低盐饮食：1.1
 
 【模型说明】
 本系统基于肠道菌群大数据AI模型，
 模型拟合度 R²=0.72，可个性化评估不同生活方式组合对体重的影响。
 ==================================================================
 """
-    st.download_button(
-        label="📥 下载完整总报告",
-        data=report,
-        file_name="BMI组合干预总报告.txt",
-        mime="text/plain"
-    )
-else:
-    st.info("完成「计算BMI+选择干预方案+点击预测」后，即可生成总报告")
+
+st.download_button(
+    label="📥 下载完整总报告",
+    data=report,
+    file_name="BMI组合干预总报告.txt",
+    mime="text/plain"
+)
+
+st.markdown('</div>', unsafe_allow_html=True)
